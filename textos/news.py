@@ -43,7 +43,7 @@ class NEWSProcessor:
         for key in entities:
             entities[key] = list(set(entities[key]))
             response[key.lower()] = entities[key]
-        new_clf = TextClassifier.load('data_fst/best-model.pt')
+        new_clf = TextClassifier.load('./textos/final-model.pt')
         response['impact'] = new_clf.predict(Sentence(sentence.text))
         with open(output_path, 'w', encoding='utf-8') as file:
             json.dump(response, file, ensure_ascii=False)
