@@ -1,4 +1,4 @@
-# AD_ASTRA2023-SpaceInvaders
+# AD ASTRA2023 - Space Invaders
 
 ¡Hola!
 
