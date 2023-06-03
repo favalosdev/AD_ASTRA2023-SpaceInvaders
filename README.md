@@ -4,7 +4,9 @@
 
 ## Instalación
 
-Para realizar la instalación es necesario ejecutar el comando `pip install -r requirements.txt`
+A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc` y `make` instalados.
+
+Naturalmente, toca clonar el repositorio y efectuar `pip install -r requirements.txt`.
 
 ## Importación
 
