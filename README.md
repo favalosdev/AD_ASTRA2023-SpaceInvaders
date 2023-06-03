@@ -4,7 +4,7 @@
 
 ## Instalación
 
-A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc` y `make` instalados.
+A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc`, `ffmpeg` y `make` instalados.
 
 Naturalmente, toca clonar el repositorio y efectuar `pip install -r requirements.txt`.
 
