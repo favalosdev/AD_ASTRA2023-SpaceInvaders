@@ -9,6 +9,23 @@ A nivel de sistema operativo, se require el sistema operativo GNU/Linux. Tambié
 Naturalmente, toca clonar el repositorio y efectuar `pip install -r requirements.txt`.
 
 ## Importación
+Para usar cualquiera de las dos soluciones se recomienda usar un entorno virtual de python, este se puede generar con:
+```
+python -m venv env
+```
+Esta instrucción puede cambiar entre sistemas operativos, por ejemplo, en linux posiblemente es python3 para usar python.Esto nos creara una nueva carpeta evn. Luego deberiamos activar este entorno virtual. Si se encuentra en windows hagal click dereco sobre la carpeta donde tiene el repositorio y abra una consola de comandos cmd y ejecute:
+```
+.\env\Scrip\activate
+```
+Si se encuentra en linux ejecute:
+```
+source .\env\bin\activate
+```
+Despues de esto, se procede a instalar todos los paquetes necesarios para la ejecución de las librerias, esto se hace mediante:
+```
+pip install -r requirements.txt
+```
+Y esperamos a que se termine de instalar todas las dependencias. En elarchivo example_textos.py se encuentra un ejemplo de como importar la libreria y de como usar los metodos.
 
 ## Ejemplos
 
