@@ -22,8 +22,8 @@ def detect_objects_in_video(video_path, output_path, image_every_x_seconds=30):
     
     print("Cargando video...")
     
-    images_path = output_path+"/IMG_originales/"
-    p_images_path = output_path+"/IMG"
+    images_path = output_path+"IMG_originales/"
+    p_images_path = output_path+"IMG"
     
     if not os.path.exists(output_path):
         os.makedirs(output_path)
@@ -32,21 +32,25 @@ def detect_objects_in_video(video_path, output_path, image_every_x_seconds=30):
     if not os.path.exists(p_images_path):
         os.makedirs(p_images_path)
     
-    subprocess.run(shlex.split(f'ffmpeg -hide_banner -i {video_path} -vf fps=1/{image_every_x_seconds} {output_path}IMG_originales/%04d.jpg'))
+    subprocess.run(shlex.split(f'ffmpeg -hide_banner -i {video_path} -vf fps=1/{image_every_x_seconds} {images_path}/%04d.jpg'))
     subprocess.call # Espera a que el proceso finalice
     
-    print("Video cargado exitosamente...")
+    print("¡Video cargado exitosamente!")
     
+    print("Encontrando objetos...")
+
     # Iteramos sobre cada elemento para realizar la predicción
     model_trained = YOLO("model.pt") 
   
     for image in os.listdir(images_path):
-        image_path = os.path.join(images_path, filename)
+        image_path = os.path.join(images_path, image)
         if image_path.endswith('jpg') or image_path.endswith('png'):
             try:
                 #images.append(image_path)
-                model_trained.predict(source=image_path, save=True, conf=0.5)  # Predecimos una imagen 
+                model_trained.predict(source=image_path, save=True, conf=0.5 ) # Predecimos una imagen 
             except:
                 continue
     
-detect_objects_in_video('videos/VideoCodefest_001-11min.mpg', 'output/')
+    #subprocess.run(shlex.split(f'ffmpeg -hide_banner -i {video_path} -vf fps=1/{image_every_x_seconds} {output_path}IMG_originales/%04d.jpg'))
+
+detect_objects_in_video('VideoCodefest_001-11min.mpg', 'output/')
