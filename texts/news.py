@@ -10,6 +10,8 @@ import numpy as np
 import docx
 from PyPDF2 import PdfReader
 import pkg_resources
+import regex as re
+
 
 
 def getTextWord(filename: str) -> str:
@@ -65,7 +67,7 @@ def ner_from_str(text: str, output_path: str):
     for key in entities:
         entities[key] = list(set(entities[key]))
         response[key.lower()] = entities[key]
-
+    response['dates'] = re.findall('(19[89][0-9]|20[0-4][0-9]|2050)', text) + re.findall('([a-zA-Z]+) del (\d{4})', text)
     new = {'New': [sentence.text]}
     new = pd.DataFrame(new)
     model = load_model().predict_proba(new)
