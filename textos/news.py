@@ -40,7 +40,7 @@ def getTextPdf(text_path: str) -> str:
 
 
 def load_model() -> Pipeline:
-    filename = './textos/pipeline.joblib'  # Ubicación del archivo entregado
+    filename = 'pipeline.joblib'  # Ubicación del archivo entregado
     # Deserializar el objeto del archivo
     with open(filename, 'rb') as f:
         model = joblib.load(f)
