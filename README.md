@@ -4,28 +4,20 @@
 
 ## Instalación
 
-A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc`, `ffmpeg` y `make` instalados.
+A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc`, `ffmpeg` y `make` instalados. Se una versión de python mayor o igual a python 3.9, se recomienda usar un entorno virtual con python 3.9 para hacer uso de la libreria. 
 
-Naturalmente, toca clonar el repositorio y efectuar `pip install -r requirements.txt`.
-
+Naturalmente, se instala la libreria mediante pip y el repositorio de github:
+```
+pip install git+https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders.git
+```
 ## Importación
-Para usar cualquiera de las dos soluciones se recomienda usar un entorno virtual de python, este se puede generar con:
+Para usar las funciones de texto se debe importar lo siguiente :
 ```
-python -m venv env
+from textos.news import ner_from_url, ner_from_file, ner_from_str
+from textos.text_preprocessor import textPreprocessor
+
 ```
-Esta instrucción puede cambiar entre sistemas operativos, por ejemplo, en linux posiblemente es python3 para usar python.Esto nos creara una nueva carpeta evn. Luego deberiamos activar este entorno virtual. Si se encuentra en windows hagal click dereco sobre la carpeta donde tiene el repositorio y abra una consola de comandos cmd y ejecute:
-```
-.\env\Scrip\activate
-```
-Si se encuentra en linux ejecute:
-```
-source .\env\bin\activate
-```
-Despues de esto, se procede a instalar todos los paquetes necesarios para la ejecución de las librerias, esto se hace mediante:
-```
-pip install -r requirements.txt
-```
-Y esperamos a que se termine de instalar todas las dependencias. En elarchivo example_textos.py se encuentra un ejemplo de como importar la libreria y de como usar los metodos.
+
 
 ## Ejemplos
 

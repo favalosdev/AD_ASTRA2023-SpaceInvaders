@@ -9,7 +9,9 @@ import joblib
 import numpy as np
 import docx
 from PyPDF2 import PdfReader
-import os
+import pkg_resources
+import regex as re
+
 
 
 def getTextWord(filename: str) -> str:
@@ -40,10 +42,8 @@ def getTextPdf(text_path: str) -> str:
 
 
 def load_model() -> Pipeline:
-    filename_svm = os.path.join(os.path.dirname(__file__), 'textos', 'pipeline.joblib')
-    # Deserializar el objeto del archivo
-    with open(filename_svm, 'rb') as f:
-        model = joblib.load(f)
+    stream = pkg_resources.resource_stream(__name__, 'pipeline.joblib')
+    model = joblib.load(stream)
     return model
 
 
@@ -67,7 +67,7 @@ def ner_from_str(text: str, output_path: str):
     for key in entities:
         entities[key] = list(set(entities[key]))
         response[key.lower()] = entities[key]
-
+    response['dates'] = re.findall('(19[89][0-9]|20[0-4][0-9]|2050)', text) + re.findall('([a-zA-Z]+) del (\d{4})', text)
     new = {'New': [sentence.text]}
     new = pd.DataFrame(new)
     model = load_model().predict_proba(new)
