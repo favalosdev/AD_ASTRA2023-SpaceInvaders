@@ -8,5 +8,5 @@ setup(
     description='My first Python library',
     author='Me',
     license='MIT',
-    install_requires=['stanza','numpy','pandas','nltk','langdetect','flair','scikit-learn','num2words','requests','joblib', 'newspaper3k', 'PyPDF2', 'python-docx'],
+    install_requires=['stanza','numpy','pandas','nltk','langdetect','flair','scikit-learn==1.2.1','num2words','requests','joblib', 'newspaper3k', 'PyPDF2', 'python-docx'],
 )
