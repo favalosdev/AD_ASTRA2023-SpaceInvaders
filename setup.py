@@ -12,6 +12,6 @@ setup(
     install_requires=['botocore==1.29.151','urllib3==1.26.16','stanza==1.5.0','pandas==2.0.2','nltk==3.8.1','flair==0.12.2','scikit-learn==1.2.1','num2words==0.5.12','requests==2.31.0','joblib', 'newspaper3k==0.2.8', 'PyPDF2==3.0.1', 'python-docx==0.8.11'],
     include_package_data=True,
     packages=['SapaceInvaders'],
-    package_dir={'SapaceInvaders': 'src/SapaceInvaders'},
-    package_data={'SapaceInvaders/textos': ['./textos/pipeline.joblib']},
+    package_dir={'SapaceInvaders': 'src/textos'},
+    package_data={'textos': ['./textos/pipeline.joblib']},
 )
