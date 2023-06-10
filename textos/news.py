@@ -9,7 +9,7 @@ import joblib
 import numpy as np
 import docx
 from PyPDF2 import PdfReader
-
+import os
 
 
 def getTextWord(filename: str) -> str:
@@ -40,7 +40,7 @@ def getTextPdf(text_path: str) -> str:
 
 
 def load_model() -> Pipeline:
-    filename_svm = './textos/pipeline.joblib'  # Ubicación del archivo entregado
+    filename_svm = os.path.join(os.path.dirname(__file__), 'textos', 'pipeline.joblib')
     # Deserializar el objeto del archivo
     with open(filename_svm, 'rb') as f:
         model = joblib.load(f)
