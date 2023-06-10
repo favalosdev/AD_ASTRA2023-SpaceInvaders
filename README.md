@@ -6,8 +6,10 @@
 
 A nivel de sistema operativo, se require el sistema operativo GNU/Linux. También se requiere tener los paquetes `gcc`, `ffmpeg` y `make` instalados. Se una versión de python mayor o igual a python 3.9, se recomienda usar un entorno virtual con python 3.9 para hacer uso de la libreria. 
 
-Naturalmente, se instala la libreria mediante pip y el repositorio de github `pip install git+https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders.git`.
-
+Naturalmente, se instala la libreria mediante pip y el repositorio de github:
+```
+pip install git+https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders.git
+```
 ## Importación
 Para usar las funciones de texto se debe importar lo siguiente :
 ```

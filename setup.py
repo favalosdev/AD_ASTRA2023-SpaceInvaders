@@ -4,7 +4,7 @@ from setuptools.command.install import install
 
 setup(
     name='SapaceInvaders',
-    packages=find_packages(include=['textos']),
+    packages=find_packages(include=['text']),
     version='0.1.0',
     description='My first Python library',
     author='Me',
