@@ -41,9 +41,6 @@ def getTextPdf(text_path: str) -> str:
 
 def load_model() -> Pipeline:
     stream = pkg_resources.resource_stream(__name__, 'pipeline.joblib')
-    #filename_svm = './textos/pipeline.joblib'  # Ubicación del archivo entregado
-    # Deserializar el objeto del archivo
-    #with open(stream, 'rb') as f:
     model = joblib.load(stream)
     return model
 
