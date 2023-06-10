@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flair.data import Sentence
 from flair.models import SequenceTagger
 import json
@@ -39,6 +38,7 @@ def getTextPdf(text_path: str) -> str:
         full_text += text
     return full_text
 
+
 def load_model() -> Pipeline:
     filename_svm = './textos/pipeline.joblib'  # Ubicación del archivo entregado
     # Deserializar el objeto del archivo
@@ -48,7 +48,6 @@ def load_model() -> Pipeline:
 
 
 def ner_from_str(text: str, output_path: str):
-
     sentence = Sentence(text)
     tagger = SequenceTagger.load("flair/ner-spanish-large")
     tagger.predict(sentence)
@@ -56,7 +55,6 @@ def ner_from_str(text: str, output_path: str):
     for entity in sentence.get_spans('ner'):
         tag = entity.tag
         text = entity.text
-
         if tag in entities:
             # Si la llave ya existe, agregamos el valor a la lista existente
             entities[tag].append(text)
@@ -70,11 +68,11 @@ def ner_from_str(text: str, output_path: str):
         entities[key] = list(set(entities[key]))
         response[key.lower()] = entities[key]
 
-    df2 = {'New': [sentence.text]}
-    df2 = pd.DataFrame(df2)
-    proba = load_model().predict_proba(df2)
-    maximo = proba[0].max()
-    prob = np.where(proba[0] == maximo)[0][0]
+    new = {'New': [sentence.text]}
+    new = pd.DataFrame(new)
+    model = load_model().predict_proba(new)
+    maximo = model[0].max()
+    prob = np.where(model[0] == maximo)[0][0]
     tag = 'NINGUNA'
     if maximo >= 0.78:
         if prob == 0:
@@ -103,18 +101,10 @@ def ner_from_url(url: str, output_path: str):
     requests.packages.urllib3.disable_warnings()
     headers = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"}
-    # parse html content
     response = requests.get(url, headers=headers, verify=False)
-    # Download the web page content without SSL certificate verification
-    # response = requests.get(url, verify=False)
     response.encoding = 'utf-8'
-    # Create an Article object
     toi_article = Article(url, language="es")
-
-    # Set the HTML content of the article
-    # toi_article.set_html(response.text)
     toi_article.download(input_html=response.content)
-    # Parse the article
     toi_article.parse()
 
     text = toi_article.text
