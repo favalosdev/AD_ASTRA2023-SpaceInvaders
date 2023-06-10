@@ -13,5 +13,5 @@ setup(
     include_package_data=True,
     packages=['SapaceInvaders'],
     package_dir={'SapaceInvaders': 'src/textos'},
-    package_data={'textos': ['./textos/pipeline.joblib']},
+    package_data={'textos': ['textos/pipeline.joblib']},
 )
