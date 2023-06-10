@@ -2,108 +2,125 @@
 from flair.data import Sentence
 from flair.models import SequenceTagger
 import json
-import pandas as pd
 import requests
-from flair.data import Sentence
 from newspaper import Article
-import dill
-
-filename_svm = './textos/pipeline.joblib' # Ubicación del archivo entregado
-# Deserializar el objeto del archivo
-with open(filename_svm, 'rb') as f:
-    svm = dill.load(f)
-    
-
-class NEWSProcessor:
-    def __init__(self):
-        self.tagger = SequenceTagger.load("flair/ner-spanish-large")
-
-    def ner_from_str(self, text, output_path):
-        """
-        Realiza el procesamiento NER (Reconocimiento de Entidades Nombradas) en un texto.
-
-        Args:
-            text (str): El texto de entrada.
-            output_path (str): La ruta del archivo de salida donde se guardará el resultado en formato JSON.
-
-        Returns:
-            str: El texto con las etiquetas NER agregadas.
-        """
-        sentence = Sentence(text)
-        self.tagger.predict(sentence)
-        entities = dict()
-        for entity in sentence.get_spans('ner'):
-            tag = entity.tag
-            text = entity.text
-
-            if tag in entities:
-                # Si la llave ya existe, agregamos el valor a la lista existente
-                entities[tag].append(text)
-            else:
-                # Si la llave no existe, creamos una nueva lista con el valor
-                entities[tag] = [text]
-
-        response = {}
-        response['text'] = sentence.text
-        for key in entities:
-            entities[key] = list(set(entities[key]))
-            response[key.lower()] = entities[key]
-
-        df2 = {'New': [sentence.text]}
-        df2 = pd.DataFrame(df2)
-        response['impact'] = svm.predict(df2)[0]
-        with open(output_path, 'w', encoding='utf-8') as file:
-            json.dump(response, file, ensure_ascii=False)
-        return sentence.to_tagged_string()
-
-    def ner_from_file(self, text_path, output_path):
-        """
-        Realiza el procesamiento NER en un archivo de texto.
-
-        Args:
-            text_path (str): La ruta del archivo de texto de entrada.
-            output_path (str): La ruta del archivo de salida donde se guardará el resultado en formato JSON.
-
-        Returns:
-            str: El texto con las etiquetas NER agregadas.
-        """
-        with open(text_path, 'r', encoding='utf-8') as file:
-            text = file.read()
-        return self.ner_from_str(text, output_path)
+import pandas as pd
+from sklearn.pipeline import Pipeline
+import joblib
+import numpy as np
+import docx
+from PyPDF2 import PdfReader
 
 
 
-    def ner_from_url(self, url, output_path):
-        """
-        Realiza el procesamiento NER en el contenido de una URL.
+def getTextWord(filename: str) -> str:
+    doc = docx.Document(filename)
+    fullText = []
+    for para in doc.paragraphs:
+        fullText.append(para.text)
+    return '\n'.join(fullText)
 
-        Args:
-            url (str): La URL del contenido.
-            output_path (str): La ruta del archivo de salida donde se guardará el resultado en formato JSON.
 
-        Returns:
-            str: El texto con las etiquetas NER agregadas.
-        """
-        requests.packages.urllib3.disable_warnings()
-        headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"}
-        # parse html content
-        response = requests.get(url, headers=headers, verify=False)
-        # Download the web page content without SSL certificate verification
-        #response = requests.get(url, verify=False)
-        response.encoding = 'utf-8'
-        # Create an Article object
-        toi_article = Article(url, language="es")
+def getText(text_path: str) -> str:
+    text = ''
+    with open(text_path, 'r', encoding='utf-8') as file:
+        text = file.read()
+    return text
 
-        # Set the HTML content of the article
-        #toi_article.set_html(response.text)
-        toi_article.download(input_html=response.content)
-        # Parse the article
-        toi_article.parse()
 
-        # Perform natural language processing
-        #toi_article.nlp()
+def getTextPdf(text_path: str) -> str:
+    temp = open(text_path, 'rb')
+    pdf_reader = PdfReader(temp)
+    num_pages = len(pdf_reader.pages)
+    full_text = ""
+    for page_num in range(num_pages):
+        page = pdf_reader.pages[page_num]
+        text = page.extract_text()
+        full_text += text
+    return full_text
 
-        # Extract title
+def load_model() -> Pipeline:
+    filename_svm = './textos/pipeline.joblib'  # Ubicación del archivo entregado
+    # Deserializar el objeto del archivo
+    with open(filename_svm, 'rb') as f:
+        model = joblib.load(f)
+    return model
 
-        text = toi_article.text
-        return self.ner_from_str(text, output_path)
+
+def ner_from_str(text: str, output_path: str):
+
+    sentence = Sentence(text)
+    tagger = SequenceTagger.load("flair/ner-spanish-large")
+    tagger.predict(sentence)
+    entities = dict()
+    for entity in sentence.get_spans('ner'):
+        tag = entity.tag
+        text = entity.text
+
+        if tag in entities:
+            # Si la llave ya existe, agregamos el valor a la lista existente
+            entities[tag].append(text)
+        else:
+            # Si la llave no existe, creamos una nueva lista con el valor
+            entities[tag] = [text]
+
+    response = {}
+    response['text'] = sentence.text
+    for key in entities:
+        entities[key] = list(set(entities[key]))
+        response[key.lower()] = entities[key]
+
+    df2 = {'New': [sentence.text]}
+    df2 = pd.DataFrame(df2)
+    proba = load_model().predict_proba(df2)
+    maximo = proba[0].max()
+    prob = np.where(proba[0] == maximo)[0][0]
+    tag = 'NINGUNA'
+    if maximo >= 0.78:
+        if prob == 0:
+            tag = 'CONTAMINACION'
+        elif prob == 1:
+            tag = 'DEFORESTACION'
+        elif prob == 2:
+            tag = 'MINERIA'
+
+    response['impact'] = tag
+    save_json(response, output_path)
+
+
+def ner_from_file(text_path: str, output_path: str):
+    if text_path.endswith('.pdf'):
+        text = getTextPdf(text_path)
+    elif text_path.endswith('.docx'):
+        text = getTextWord(text_path)
+    else:
+        text = getText(text_path)
+    ner_from_str(text, output_path)
+
+
+def ner_from_url(url: str, output_path: str):
+
+    requests.packages.urllib3.disable_warnings()
+    headers = {
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"}
+    # parse html content
+    response = requests.get(url, headers=headers, verify=False)
+    # Download the web page content without SSL certificate verification
+    # response = requests.get(url, verify=False)
+    response.encoding = 'utf-8'
+    # Create an Article object
+    toi_article = Article(url, language="es")
+
+    # Set the HTML content of the article
+    # toi_article.set_html(response.text)
+    toi_article.download(input_html=response.content)
+    # Parse the article
+    toi_article.parse()
+
+    text = toi_article.text
+    ner_from_str(text, output_path)
+
+
+def save_json(data, output_path):
+    with open(output_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
