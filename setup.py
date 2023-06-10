@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-
+from setuptools.command.install import install
 
 setup(
     name='textos',
