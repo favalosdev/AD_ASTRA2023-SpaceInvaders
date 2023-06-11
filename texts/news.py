@@ -67,7 +67,7 @@ def ner_from_str(text: str, output_path: str):
     for key in entities:
         entities[key] = list(set(entities[key]))
         response[key.lower()] = entities[key]
-    response['dates'] = re.findall('(19[89][0-9]|20[0-4][0-9]|2050)', text) + re.findall('([a-zA-Z]+) del (\d{4})', text)
+    response['dates'] = list(set(re.findall(r'\b(\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+(?:de\s+)?\d{4}|\d{4})\b', sentence.text, re.IGNORECASE)))
     new = {'New': [sentence.text]}
     new = pd.DataFrame(new)
     model = load_model().predict_proba(new)
