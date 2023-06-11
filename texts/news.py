@@ -13,7 +13,7 @@ from PyPDF2 import PdfReader
 from sklearn.pipeline import Pipeline
 
 
-def getTextWord(file_path: str) -> str:
+def __getTextWord(file_path: str) -> str:
     """
     Obtiene el texto de un documento .docx o un documento de Word.
 
@@ -30,7 +30,7 @@ def getTextWord(file_path: str) -> str:
     return '\n'.join(fullText)
 
 
-def getText(text_path: str) -> str:
+def __getText(text_path: str) -> str:
     """
     Obtiene el texto de un documento .txt o un documento de texto.
 
@@ -46,7 +46,7 @@ def getText(text_path: str) -> str:
     return text
 
 
-def getTextPdf(text_path: str) -> str:
+def __getTextPdf(text_path: str) -> str:
     """
     Obtiene el texto de un documento .pdf o un documento PDF.
 
@@ -67,7 +67,7 @@ def getTextPdf(text_path: str) -> str:
     return full_text
 
 
-def load_model() -> Pipeline:
+def __load_model() -> Pipeline:
     """
     Carga el modelo que se encuentra en el archivo pipeline.joblib.
 
@@ -109,7 +109,7 @@ def ner_from_str(text: str, output_path: str):
     response['dates'] = list(set(re.findall(r'\b(\d{1,2}\s+(?:de\s+)?(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s+(?:de\s+)?\d{4}|\d{4})\b', sentence.text, re.IGNORECASE)))
     new = {'New': [sentence.text]}
     new = pd.DataFrame(new)
-    model = load_model().predict_proba(new)
+    model = __load_model().predict_proba(new)
     maximo = model[0].max()
     prob = np.where(model[0] == maximo)[0][0]
     tag = 'NINGUNA'
@@ -122,7 +122,7 @@ def ner_from_str(text: str, output_path: str):
             tag = 'MINERIA'
 
     response['impact'] = tag
-    save_json(response, output_path)
+    __save_json(response, output_path)
 
 
 def ner_from_file(text_path: str, output_path: str):
@@ -135,11 +135,11 @@ def ner_from_file(text_path: str, output_path: str):
         output_path (str): Ruta del archivo .json donde se guardará el resultado.
     """
     if text_path.endswith('.pdf'):
-        text = getTextPdf(text_path)
+        text = __getTextPdf(text_path)
     elif text_path.endswith('.docx'):
-        text = getTextWord(text_path)
+        text = __getTextWord(text_path)
     else:
-        text = getText(text_path)
+        text = __getText(text_path)
     ner_from_str(text, output_path)
 
 
@@ -164,7 +164,7 @@ def ner_from_url(url: str, output_path: str):
     ner_from_str(text, output_path)
 
 
-def save_json(data, output_path):
+def __save_json(data: dict, output_path: str):
     """
     Crea, escribe y guarda el archivo .json.
 
