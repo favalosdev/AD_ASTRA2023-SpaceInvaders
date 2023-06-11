@@ -1,21 +1,29 @@
-from flair.data import Sentence
-from flair.models import SequenceTagger
 import json
-import requests
-from newspaper import Article
-import pandas as pd
-from sklearn.pipeline import Pipeline
+import docx
 import joblib
 import numpy as np
-import docx
-from PyPDF2 import PdfReader
+import pandas as pd
 import pkg_resources
 import regex as re
+import requests
+from flair.data import Sentence
+from flair.models import SequenceTagger
+from newspaper import Article
+from PyPDF2 import PdfReader
+from sklearn.pipeline import Pipeline
 
 
+def getTextWord(file_path: str) -> str:
+    """
+    Obtiene el texto de un documento .docx o un documento de Word.
 
-def getTextWord(filename: str) -> str:
-    doc = docx.Document(filename)
+    Args:
+        file_path (str): Ruta del archivo.
+
+    Returns:
+        str: Texto extraído del documento.
+    """
+    doc = docx.Document(file_path)
     fullText = []
     for para in doc.paragraphs:
         fullText.append(para.text)
@@ -23,6 +31,15 @@ def getTextWord(filename: str) -> str:
 
 
 def getText(text_path: str) -> str:
+    """
+    Obtiene el texto de un documento .txt o un documento de texto.
+
+    Args:
+        text_path (str): Ruta del archivo.
+
+    Returns:
+        str: Texto extraído del documento.
+    """
     text = ''
     with open(text_path, 'r', encoding='utf-8') as file:
         text = file.read()
@@ -30,6 +47,15 @@ def getText(text_path: str) -> str:
 
 
 def getTextPdf(text_path: str) -> str:
+    """
+    Obtiene el texto de un documento .pdf o un documento PDF.
+
+    Args:
+        text_path (str): Ruta del archivo.
+
+    Returns:
+        str: Texto extraído del documento.
+    """
     temp = open(text_path, 'rb')
     pdf_reader = PdfReader(temp)
     num_pages = len(pdf_reader.pages)
@@ -42,12 +68,25 @@ def getTextPdf(text_path: str) -> str:
 
 
 def load_model() -> Pipeline:
+    """
+    Carga el modelo que se encuentra en el archivo pipeline.joblib.
+
+    Returns:
+        Pipeline: Modelo cargado.
+    """
     stream = pkg_resources.resource_stream(__name__, 'pipeline.joblib')
     model = joblib.load(stream)
     return model
 
 
 def ner_from_str(text: str, output_path: str):
+    """
+    Obtiene el reconocimiento de entidades con nombre (NER) en formato JSON a partir de una cadena de texto.
+
+    Args:
+        text (str): Texto del cual se desea obtener el NER y la clasificación.
+        output_path (str): Ruta del archivo .json donde se guardará el resultado.
+    """
     sentence = Sentence(text)
     tagger = SequenceTagger.load("flair/ner-spanish-large")
     tagger.predict(sentence)
@@ -87,6 +126,14 @@ def ner_from_str(text: str, output_path: str):
 
 
 def ner_from_file(text_path: str, output_path: str):
+    """
+    Obtiene el reconocimiento de entidades con nombre (NER) en formato JSON a partir de un archivo.
+    El archivo puede ser .txt, .pdf o .docx.
+
+    Args:
+        text_path (str): Ruta del archivo del cual se desea obtener el NER y la clasificación.
+        output_path (str): Ruta del archivo .json donde se guardará el resultado.
+    """
     if text_path.endswith('.pdf'):
         text = getTextPdf(text_path)
     elif text_path.endswith('.docx'):
@@ -97,20 +144,33 @@ def ner_from_file(text_path: str, output_path: str):
 
 
 def ner_from_url(url: str, output_path: str):
+    """
+    Obtiene el reconocimiento de entidades con nombre (NER) en formato JSON a partir de un enlace o URL.
 
+    Args:
+        url (str): Enlace del cual se desea obtener el NER y la clasificación.
+        output_path (str): Ruta del archivo .json donde se guardará el resultado.
+    """
     requests.packages.urllib3.disable_warnings()
     headers = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"}
     response = requests.get(url, headers=headers, verify=False)
     response.encoding = 'utf-8'
-    toi_article = Article(url, language="es")
-    toi_article.download(input_html=response.content)
-    toi_article.parse()
+    article = Article(url, language="es")
+    article.download(input_html=response.content)
+    article.parse()
 
-    text = toi_article.text
+    text = article.text
     ner_from_str(text, output_path)
 
 
 def save_json(data, output_path):
+    """
+    Crea, escribe y guarda el archivo .json.
+
+    Args:
+        data: Datos que se guardarán en el archivo .json.
+        output_path (str): Ruta del archivo .json donde se guardará el resultado.
+    """
     with open(output_path, 'w', encoding='utf-8') as file:
         json.dump(data, file, ensure_ascii=False, indent=2)

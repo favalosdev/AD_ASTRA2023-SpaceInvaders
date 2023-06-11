@@ -14,7 +14,14 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
       print('pipe')
       
   def replace_numbers(self, words):
-    """Replace all interger occurrences in list of tokenized words with textual representation"""
+    """Reemplaza todas las apariciones de enteros en una lista de palabras tokenizadas con representación textual.
+    
+    Args: 
+      words (list): Lista de palabras tokenizadas.
+
+    Returns:
+      list: Lista de palabras de enteros reemplazadas por su representación textual.
+    """
     new_words = []
     for word in words:
         if word.isdigit():
@@ -25,6 +32,14 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
     return new_words
   
   def remove_nonlatin(self, words):
+      """Elimina caracteres non-Latin desde una lista de palabras tokenizadas.
+          
+      Args:
+        words (list): Lista de palabras tokenizadas.
+              
+      Returns:
+        list: Lista de palabras sin los caracteres non-Latin.
+      """
       new_words = []
       for word in words:
           new_word = ''
@@ -35,7 +50,14 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
       return new_words
   
   def remove_stopwords(self, words):
-      """Remove stop words from list of tokenized words"""
+      """Elimina las palabras vacías (stopwords) desde una lista de palabras tokenizadas.
+        
+        Args:
+            words (list): Lista de palabras tokenizadas.
+            
+        Returns:
+            list: Lista de palabras sin las palabras vacías.
+      """
       new_words = []
       stop_words = set(stopwords.words('spanish'))
       s = set(stopwords.words('spanish'))
@@ -45,13 +67,28 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
       return new_words
   
   def remove_punctuation(self, words):
-    """Remove punctuation from list of tokenized words"""
+    """Elimina signos de puntuación de una lista de palabras tokenizadas.
+
+        Args:
+            words (list): Lista de palabras tokenizadas.
+            
+        Returns:
+            str: Una cadena de caracteres sin signos de puntuación.
+    """
     new_words = ''
     for word in words:
             new_words += re.sub(r'[^\w\s]', ' ', word)
     return new_words
   
   def tokenLemma(self, X):
+    """ Aplica la tokenización, lematización, etiquetado de partes del discurso y tokenización de palabras compuestas utilizando Stanza.
+        
+      Args:
+        X (pd.Series): Datos de entrada que contienen texto.
+            
+      Returns:
+        list: Lista de objetos de Documento de Stanza.
+    """
     nlp = stanza.Pipeline('es', processors='tokenize,mwt,pos,lemma', use_gpu=False)
 
     X = X.apply(self.remove_punctuation)
@@ -60,12 +97,30 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
     return nlp(in_docs)
   
   def procesamientoPalabras(self, words):
+    """ Realiza tareas de procesamiento de palabras, incluyendo la eliminación de caracteres no latinos, reemplazo de números
+    y eliminación de palabras vacías en una lista de palabras tokenizadas.
+        
+    Args:
+      words (list): Lista de palabras tokenizadas.
+            
+    Returns:
+      list: Lista de palabras procesadas.
+    """
     words = self.remove_nonlatin(words)
     words = self.replace_numbers(words)
     words = self.remove_stopwords(words)
     return words
   
   def transform(self, X):
+    """
+    Aplica el pipeline de preprocesamiento de texto para transformar los datos de entrada.
+    
+    Args:
+        X (pd.Series): Datos de entrada que contienen texto.
+        
+    Returns:
+        pd.Series: Datos transformados.
+    """
     out_docs = self.tokenLemma(X)
     palabras = []
     for doc in out_docs:
@@ -81,4 +136,14 @@ class textPreprocessor(BaseEstimator, TransformerMixin):
     return X
   
   def fit(self, X, y=None):
+      """
+      Ajusta el preprocesador de texto a los datos de entrada.
+    
+    Args:
+        X (arreglo o matriz dispersa): Datos de entrada en los que ajustar el preprocesador.
+        y (arreglo, opcional): Etiquetas de destino. Por defecto es None.
+        
+    Returns:
+        self
+      """
       return self
