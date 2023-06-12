@@ -1,5 +1,5 @@
-from texts.news import ner_from_url, ner_from_file, ner_from_str
-from texts.text_preprocessor import textPreprocessor
+from SpaceInvaders.news import ner_from_url, ner_from_file, ner_from_str
+from SpaceInvaders.text_preprocessor import textPreprocessor
 
 ner_from_url("https://cods.uniandes.edu.co/mineria-una-amenaza-latente-para-la-amazonia/", "url.json")
 ner_from_file("texto.pdf", "file.json")
