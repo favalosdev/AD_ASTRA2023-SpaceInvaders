@@ -137,3 +137,7 @@ La estrategia para resolver el reto de los textos consistió en cuatro fases:
 4. Se desarrolló un modelo de clasificación de textos. Se realizó un proceso de preprocesamiento de los textos, se vectorizaron y se entrenaron varios modelos de clasificación. Se evaluaron diferentes alternativas como Random Forest, redes neuronales, Support Vector Classifier, entre otras. Para cada una de estas opciones, se ajustaron los hiperparámetros y se compararon las métricas de interés (f1 score y accuracy).
 
 El siguiente diagrama ayuda a digerir lo anteriormente dicho:
+
+![estrategia-texto](https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders/assets/25191695/03eaf008-4c78-40bc-a8f0-f1cb3a4fcdbc)
+
+
