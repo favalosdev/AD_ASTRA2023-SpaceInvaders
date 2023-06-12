@@ -3,7 +3,7 @@ from setuptools.command.install import install
 
 
 setup(
-    name='SapaceInvaders',
+    name='CodeFest_Ad_Astra',
     packages=find_packages(include=['SapaceInvaders']),
     version='0.1.0',
     description='My first Python library',
