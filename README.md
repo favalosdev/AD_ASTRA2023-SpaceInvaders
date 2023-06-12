@@ -124,6 +124,8 @@ La estrategia para resolver el reto consistió en tres fases:
 
 El siguiente diagrama ayuda a digerir lo anteriormente dicho:
 
+![estrategia-video](https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders/assets/25191695/3406d535-20ec-479e-9a53-37218745668b)
+
 ### Texto
 La estrategia para resolver el reto de los textos consistió en cuatro fases:
 
