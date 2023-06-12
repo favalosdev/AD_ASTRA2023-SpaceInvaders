@@ -13,26 +13,28 @@ from datetime import datetime
 import easyocr
 import pkg_resources
 from pathlib import Path
+import shutil
+
 torch.cuda.empty_cache()
 seed = 2023
 
 
-"""
-"""
 def detect_objects_in_video(
     video_path: str,
     output_path: str,
     image_every_x_seconds=30,
-    confidence_threshold=0.6
+    confidence_threshold=0.6,
+    csv_name='results'
 ):
     """
     Detecta objetos en un archivo de video y escribe los resultados en un archivo CSV.
 
     Parámetros:
         video_path (str): La ruta al archivo de video.
-        output_path (str): La ruta al archivo CSV de salida.
+        output_path (str): Directorio destino que contendrá el CSV y el directorio IMG con las imágenes anotadas.
         image_every_x_seconds (int, opcional): Intervalo en segundos para extraer fotogramas del video. Por defecto es 30.
         confidence_threshold (float, opcional): Umbral de confianza para la detección de objetos. Por defecto es 0.6.
+        csv_name (str, opcional): Nombre del archivo CSV resultante SIN extensión. Por defecto es 'results'.
 
     Retorna:
         None
@@ -70,7 +72,19 @@ def detect_objects_in_video(
     # Definir header del .csv
     to_write = [('ID', 'OBJECT_TYPE', 'TIME', 'COORDINATES_TEXT')]
     
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+        if not os.path.exists(os.path.join(output_path, 'IMG')):
+            os.mkdir(os.path.join(output_path, 'IMG'))
+    
+    else:
+        shutil.rmtree(os.path.join(output_path, 'IMG'))
+        os.mkdir(os.path.join(output_path, 'IMG'))
+
+
     frames_info = __probe(video_path, output_path, image_every_x_seconds)
+
     # Cargar el modelo que se entrenó
     model = YOLO(Path(__file__).parent / 'model.pt')
     reader = easyocr.Reader(['en', 'es'])
@@ -79,7 +93,10 @@ def detect_objects_in_video(
         rows = __extract_information(model, reader, output_path, frame_path, confidence_threshold, time)
         to_write.extend(rows)
     
-    __compose_csv(output_path, to_write)
+    __compose_csv(output_path, to_write, csv_name)
+
+    # Limpiar el espacio de trabajo
+    shutil.rmtree(os.path.join(output_path, 'tmp'))
 
 def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str, image_path: str, confidence_threshold: float, time: int) -> list:
 
@@ -135,13 +152,13 @@ def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str,
             identifier = str(uuid.uuid4())
             
             # Dibujar en la imagen el recuadro
-            __draw_box(output_path, image_path, boundaries, identifier, object_type)
+            __draw_box(output_path, image_path, boundaries, identifier, object_type, conf)
             
             to_add.append((identifier, object_type, time, coordinates_text))
             
     return to_add
 
-def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: str, object_type: str):
+def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: str, object_type: str, conf: float):
     """
     Dibuja un recuadro alrededor de un objeto detectado en una imagen y guarda la imagen resultante.
 
@@ -151,6 +168,7 @@ def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: 
         boundaries: Las coordenadas del recuadro del objeto detectado (x1, y1, x2, y2).
         identifier: El identificador único del objeto.
         object_type: El tipo de objeto detectado.
+        conf: La confianza del modelo en la detección del objeto.
 
     Retorna:
         None
@@ -186,7 +204,7 @@ def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: 
 
     # Añadir un label a la imagen
     tag_label = object_type
-    cv2.putText(image, tag_label, (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 2)
+    cv2.putText(image, tag_label + ' ' + str(conf), (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 2)
 
     # Escribir la imagen con el recuadro y el tag
     cv2.imwrite(os.path.join(output_path, 'IMG', identifier + '.jpg'), image)
@@ -194,24 +212,18 @@ def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: 
 """
 Obtener muestra de imágenes con ffmpeg.
 """
-def __probe(video_path: str, images_path: str, image_every_x_seconds: int)-> list:
-    if not os.path.exists('tmp'):
-        os.mkdir('tmp')
-    frames_dir = 'tmp'
+def __probe(video_path: str, output_path: str, image_every_x_seconds: int) -> list:
+    frames_dir = os.path.join(output_path, 'tmp')
+    if not os.path.exists(frames_dir):
+        os.mkdir(frames_dir)
+  
     
-    subprocess.run(shlex.split(f'ffmpeg -hide_banner -loglevel panic -i {video_path} -vf fps=1/{image_every_x_seconds} {frames_dir}/%04d.jpg'), shell=True)
+    subprocess.run(shlex.split(f'ffmpeg -hide_banner -loglevel panic -i {video_path} -vf fps=1/{image_every_x_seconds} {frames_dir}/%05d.jpg'))
     
     # Espera a que el proceso finalice
     subprocess.call
     
     frames_paths = [os.path.join(frames_dir, file_name) for file_name in os.listdir(frames_dir) if file_name.endswith('.jpg')]
-    
-    video_info = subprocess.check_output(shlex.split(f'ffprobe -v error -select_streams v:0 -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {video_path}'))
-    
-    # Esperar que el proceso finalice, otra vez
-    subprocess.call
-    
-    video_duration = float(video_info.decode('utf-8').strip())
     
     # Calcular en qué momento del vídeo se observa cada frame
     # tomando en cuenta el número del frame y el número de segundos
@@ -236,31 +248,34 @@ def __extract_coordinates(reader:  easyocr.Reader, image_path: str) -> str:
     return lat + '|' + long
 
 def __get_latitude(reader: easyocr.Reader, image: np.array) -> str:
-    box = image[40:63, 943:1050, :]
-    text = __get_text(reader, box)
-    return text + 'W' if text else 'Incalculable'
+    try:
+        box = image[40:64, 1080:1250, :]
+        text = reader.readtext(image=box)[0][1]
+        text = re.sub(r'\D', '', text)
+        long = text[:2] + '°' + text[3:4] + '\''+ text[5:7] + '\'\'' + ' W'
+        return long
+    except:
+        return 'Incalculable'
 
 def __get_longitude(reader: easyocr.Reader, image: np.array) -> str:
-    box = image[40:63, 1095:1219, :]
-    text = __get_text(reader, box)
-    return text + 'N' if text else 'Incalculable'
-
-def __get_text(reader: easyocr.Reader, image: np.array) -> str:
     try:
-        raw = reader.readtext(image=image, decoder='beamsearch')[0][1]
-        print(raw)
-        raw = re.sub(r'[^0-9]', '', raw)
-        return raw
+        box = image[40:63, 940:1080, :]
+        text = reader.readtext(image=box)[0][1]
+        text = re.sub(r'\D', '', text)
+        lat = text[:1] + '°' + text[2:4] + '\'' + text[5:7] + '\'\'' + ' N'
+        return lat
     except:
-        return None
+        return 'Incalculable'
     
-def __compose_csv(output_path: str, data: list):
+def __compose_csv(output_path: str, data: list, csv_name: str):
     """
     Crea un archivo CSV y escribe los datos en él.
 
     Parámetros:
         output_path: La ruta de salida donde se creará el archivo CSV.
         data: Los datos a escribir en el archivo CSV.
+        csv_name: Nombre del CSV resultante. Es pasado por parámetro desde el método principal de la libería
+            de lo contrario, tomará el nombre 'results.csv'
 
     Retorna:
         None
@@ -277,9 +292,11 @@ def __compose_csv(output_path: str, data: list):
 
         compose_csv(output_path, data)
     """
-    if not os.path.exists('output'):
-        os.mkdir('output')
-    csv_path = os.path.join(output_path, 'results.csv')
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    csv_path = os.path.join(output_path, csv_name + '.csv')
     with open(csv_path, 'w', encoding='UTF-8') as output:
         writer = csv.writer(output)
         writer.writerows(data)
+    
