@@ -128,7 +128,7 @@ El siguiente diagrama ayuda a digerir lo anteriormente dicho:
 
 ![estrategia-video](https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders/assets/25191695/3406d535-20ec-479e-9a53-37218745668b)
 
-### Texto
+### Identificación de entidades, y clasificación de noticias
 La estrategia para resolver el reto de los textos consistió en cuatro fases:
 
 1. Identificación de las entidades de interés (organizaciones, personas, lugares, fechas, miscelánea). Asimismo, se identificaron las posibles clasificaciones de los textos (Deforestación, Contaminación, Minería o Ninguna).
