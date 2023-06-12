@@ -1,2 +1,2 @@
 include SpaceInvaders/*.joblib
-includes SpaceInvaders/*.pt
+include SpaceInvaders/*.pt
