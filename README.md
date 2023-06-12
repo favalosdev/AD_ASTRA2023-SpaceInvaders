@@ -33,6 +33,8 @@ Se require tener instalado el paquete `ffmpeg`. Esto se hace de las siguiente ma
     brew install ffmpeg
     ```
 + Después de que se complete la instalación, puede ejecutar `ffmpeg` o `ffprobe` en Terminal para verificar la instalación. Se debería ver la información de la versión impresa en la consola.
++ 
+## Instalación de la librería
 
 Por otra parte, se recomienda usar una versión de python mayor o igual a python 3.9. Además, se recomienda usar un entorno virtual de python para hacer uso de la libreria. Para instalar instala la libreria mediante pip y el repositorio de github:
 
