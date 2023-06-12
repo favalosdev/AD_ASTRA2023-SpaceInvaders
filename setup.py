@@ -4,7 +4,7 @@ from setuptools.command.install import install
 
 setup(
     name='CodeFest_Ad_Astra',
-    packages=find_packages(include=['SapaceInvaders']),
+    packages=find_packages(include=['SpaceInvaders']),
     version='0.1.0',
     description='My first Python library',
     author='Me',
