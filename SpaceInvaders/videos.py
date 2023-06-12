@@ -25,12 +25,54 @@ def detect_objects_in_video(
     image_every_x_seconds=30,
     confidence_threshold=0.6
 ):
+    """
+    Detecta objetos en un archivo de video y escribe los resultados en un archivo CSV.
+
+    Parámetros:
+        video_path (str): La ruta al archivo de video.
+        output_path (str): La ruta al archivo CSV de salida.
+        image_every_x_seconds (int, opcional): Intervalo en segundos para extraer fotogramas del video. Por defecto es 30.
+        confidence_threshold (float, opcional): Umbral de confianza para la detección de objetos. Por defecto es 0.6.
+
+    Retorna:
+        None
+
+    Lanza:
+        Cualquier excepción lanzada por las funciones subyacentes.
+
+    Descripción:
+        Este método detecta objetos en un archivo de video utilizando un modelo pre-entrenado de detección de objetos (basado en YOLO-v8) 
+        y extrae información de los objetos detectados utilizando un lector OCR (Reconocimiento Óptico de Caracteres).
+        El método procesa fotogramas del video en intervalos regulares especificados por 'image_every_x_seconds'.
+        La información de los objetos detectados se escribe en un archivo CSV especificado por 'output_path'.
+
+        El parámetro 'video_path' debe ser una ruta válida a un archivo de video soportado por la librería de procesamiento
+        de video ffmpeg.
+
+        El parámetro 'image_every_x_seconds' determina el intervalo en el que se extraen los fotogramas del video. Por ejemplo,
+        si 'image_every_x_seconds' se establece en 30, se extraerá un fotograma cada 30 segundos del video.
+
+        El parámetro 'confidence_threshold' controla el nivel mínimo de confianza requerido para considerar un objeto como detectado.
+        Los objetos con puntajes de confianza por debajo de este umbral se ignorarán. 
+        
+        Las clases (tipos) de los objetos son: casa, construccion,via, vehiculo, rio, fuente hidrica, lancha, deforestacion, 
+        mineria ilegal y otros.
+
+        El archivo CSV de salida tendrá las siguientes columnas: 'ID', 'OBJECT_TYPE', 'TIME' y 'COORDINATES_TEXT'.
+        Cada fila representa un objeto detectado en un fotograma e incluye el ID único del objeto, el tipo de objeto,
+        el tiempo en el video en el que se detectó el objeto y el texto extraído de las coordenadas del objeto
+        utilizando OCR.
+
+    Ejemplo:
+        detect_objects_in_video('ruta/video.mp4', 'salida.csv', image_every_x_seconds=60, confidence_threshold=0.7)
+    """
+     
     # Definir header del .csv
     to_write = [('ID', 'OBJECT_TYPE', 'TIME', 'COORDINATES_TEXT')]
     
     frames_info = __probe(video_path, output_path, image_every_x_seconds)
     # Cargar el modelo que se entrenó
-    model = YOLO(Path(__file__).parent / 'model_m_25.pt')
+    model = YOLO(Path(__file__).parent / 'model.pt')
     reader = easyocr.Reader(['en', 'es'])
     
     for frame_path, time in frames_info:
@@ -40,6 +82,40 @@ def detect_objects_in_video(
     __compose_csv(output_path, to_write)
 
 def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str, image_path: str, confidence_threshold: float, time: int) -> list:
+
+    """
+    Extrae información de objetos detectados en una imagen utilizando un modelo y un lector OCR.
+
+    Parámetros:
+        model: El modelo utilizado para la detección de objetos.
+        reader: El lector OCR utilizado para extraer coordenadas de texto.
+        output_path: La ruta de salida donde se guarda la imagen con los objetos detectados.
+        image_path: La ruta de la imagen de entrada.
+        confidence_threshold: Umbral de confianza para filtrar los objetos detectados.
+        time: El tiempo asociado a la imagen en un video.
+
+    Retorna:
+        Una lista de tuplas que contiene 'ID', 'OBJECT_TYPE', 'TIME' y 'COORDINATES_TEXT' sobre los objetos detectados.
+
+    Descripción:
+        Este método toma un modelo pre-entrenado para la detección de objetos, un lector OCR y una imagen de entrada.
+        Utiliza el modelo para detectar objetos en la imagen y el lector OCR para extraer las coordenadas de texto.
+        Los objetos detectados con una confianza por encima del umbral especificado se guardan en una lista de tuplas,
+        junto con su información relevante (identificador, tipo de objeto, tiempo y coordenadas de texto).
+
+        La función devuelve una lista de tuplas, donde cada tupla contiene información sobre un objeto detectado.
+        Cada tupla tiene el siguiente formato: (identificador, tipo de objeto, tiempo, coordenadas de texto).
+
+    Ejemplo:
+        model = YOLO('ruta/modelo.pt')
+        reader = easyocr.Reader(['en', 'es'])
+        image_path = 'ruta/imagen.jpg'
+        output_path = 'ruta/salida.jpg'
+        confidence_threshold = 0.6
+        time = 5
+
+        objects_info = extract_information(model, reader, output_path, image_path, confidence_threshold, time)
+    """
     to_add = []
     
     # Obtener las coordenadas
@@ -66,6 +142,42 @@ def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str,
     return to_add
 
 def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: str, object_type: str):
+    """
+    Dibuja un recuadro alrededor de un objeto detectado en una imagen y guarda la imagen resultante.
+
+    Parámetros:
+        output_path: La ruta de salida donde se guarda la imagen resultante.
+        image_path: La ruta de la imagen de entrada.
+        boundaries: Las coordenadas del recuadro del objeto detectado (x1, y1, x2, y2).
+        identifier: El identificador único del objeto.
+        object_type: El tipo de objeto detectado.
+
+    Retorna:
+        None
+
+    Descripción:
+        Este método toma una imagen de entrada, las coordenadas de un recuadro que delimita un objeto detectado,
+        un identificador único para el objeto y el tipo de objeto detectado.
+        Luego, dibuja un recuadro alrededor del objeto en la imagen y agrega un etiqueta con el tipo de objeto.
+        La imagen resultante se guarda en la ruta de salida especificada por 'output_path'.
+
+        El parámetro 'boundaries' especifica las coordenadas del recuadro del objeto detectado.
+        Debe ser una lista o tupla con cuatro valores: (x1, y1, x2, y2), donde (x1, y1) son las coordenadas del punto
+        superior izquierdo del recuadro y (x2, y2) son las coordenadas del punto inferior derecho del recuadro.
+
+        El método utiliza la biblioteca OpenCV para leer la imagen de entrada, dibujar el recuadro y la etiqueta,
+        y luego guardar la imagen resultante en 'output_path'.
+
+    Ejemplo:
+        image_path = 'ruta/imagen.jpg'
+        output_path = 'ruta/salida.jpg'
+        boundaries = [100, 100, 200, 200]
+        identifier = 'objeto1'
+        object_type = 'coche'
+
+        draw_box(output_path, image_path, boundaries, identifier, object_type)
+    """
+
     image = cv2.imread(image_path)
     x1, y1, x2, y2 = boundaries
     
@@ -142,10 +254,29 @@ def __get_text(reader: easyocr.Reader, image: np.array) -> str:
     except:
         return None
     
-
-"""
-"""
 def __compose_csv(output_path: str, data: list):
+    """
+    Crea un archivo CSV y escribe los datos en él.
+
+    Parámetros:
+        output_path: La ruta de salida donde se creará el archivo CSV.
+        data: Los datos a escribir en el archivo CSV.
+
+    Retorna:
+        None
+
+    Descripción:
+        Este método toma los datos proporcionados y los escribe en un archivo CSV en la ruta de salida especificada por 'output_path'.
+
+        El parámetro 'data' es una lista de listas o tuplas que contiene los datos a escribir en el archivo CSV. Data tiene la siguiente
+        estructura: [('ID', 'OBJECT_TYPE', 'TIME', 'COORDINATES_TEXT')]. Cada lista o tupla representa una fila en el archivo CSV.
+
+    Ejemplo:
+        output_path = 'ruta/archivo.csv'
+        data = [('ID', 'OBJECT_TYPE', 'TIME', 'COORDINATES_TEXT'), ('1', 'Coche', '10:15:30', "45°67'32'' N| 76°3'42'' W")]
+
+        compose_csv(output_path, data)
+    """
     if not os.path.exists('output'):
         os.mkdir('output')
     csv_path = os.path.join(output_path, 'results.csv')

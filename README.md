@@ -13,9 +13,8 @@ pip install git+https://github.com/favalosdev/AD_ASTRA2023-SpaceInvaders.git
 ## Importación
 Para usar las funciones de texto se debe importar lo siguiente :
 ```
-from textos.news import ner_from_url, ner_from_file, ner_from_str
-from textos.text_preprocessor import textPreprocessor
-
+from SpaceInvaders.news import ner_from_url, ner_from_file, ner_from_str
+from SpaceInvaders.text_preprocessor import textPreprocessor
 ```
 
 
