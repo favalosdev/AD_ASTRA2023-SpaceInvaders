@@ -1,2 +1,2 @@
-include SapaceInvaders/*.joblib
-includes SapaceInvaders/*.pt
+include SpaceInvaders/*.joblib
+includes SpaceInvaders/*.pt
