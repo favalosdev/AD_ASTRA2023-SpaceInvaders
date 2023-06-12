@@ -66,7 +66,7 @@ def detect_objects_in_video(
         utilizando OCR.
 
     Ejemplo:
-        detect_objects_in_video('ruta/video.mp4', 'salida.csv', image_every_x_seconds=60, confidence_threshold=0.7)
+        detect_objects_in_video('ruta/video.mp4', 'salida', image_every_x_seconds=60, confidence_threshold=0.7)
     """
      
     # Definir header del .csv
@@ -127,7 +127,7 @@ def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str,
         model = YOLO('ruta/modelo.pt')
         reader = easyocr.Reader(['en', 'es'])
         image_path = 'ruta/imagen.jpg'
-        output_path = 'ruta/salida.jpg'
+        output_path = 'ruta/salida/'
         confidence_threshold = 0.6
         time = 5
 
@@ -159,6 +159,7 @@ def __extract_information(model: YOLO, reader: easyocr.Reader, output_path: str,
     return to_add
 
 def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: str, object_type: str, conf: float):
+    
     """
     Dibuja un recuadro alrededor de un objeto detectado en una imagen y guarda la imagen resultante.
 
@@ -209,10 +210,29 @@ def __draw_box(output_path: str, image_path: str, boundaries: list, identifier: 
     # Escribir la imagen con el recuadro y el tag
     cv2.imwrite(os.path.join(output_path, 'IMG', identifier + '.jpg'), image)
 
-"""
-Obtener muestra de imágenes con ffmpeg.
-"""
 def __probe(video_path: str, output_path: str, image_every_x_seconds: int) -> list:
+
+    """
+    Extrae los cuadros de un video y calcula los momentos en que se observa cada cuadro. Implementa threads para obtener
+    ágilmente las imágenes.
+    
+    Parámetros:
+        video_path (str): Ruta del archivo de video.
+        output_path (str): Ruta de salida para almacenar los cuadros extraídos.
+        image_every_x_seconds (int): Intervalo de tiempo en segundos para extraer los cuadros. Por ejemplo, 5 extraerá
+                                     1 cuadro cada 5 segundos.
+    
+    Retorna:
+        list: Lista de tuplas que contiene la ruta de cada cuadro extraído y su momento en el video.
+
+    Ejemplo:
+        video_path = 'ruta/video.mp4'
+        output_path = 'ruta/salida'
+        image_every_x_seconds = 5
+
+        probe(video_path, output_path, image_every_x_seconds)
+    """
+
     frames_dir = os.path.join(output_path, 'tmp')
     if not os.path.exists(frames_dir):
         os.mkdir(frames_dir)
@@ -236,18 +256,48 @@ def __probe(video_path: str, output_path: str, image_every_x_seconds: int) -> li
         
     return zip(frames_paths, frame_timestamps)
 
-
-"""
-Extraer las coordenadas de un vídeo a través de
-una librería que soporte OCR.
-"""
 def __extract_coordinates(reader:  easyocr.Reader, image_path: str) -> str:
+
+    """
+    Extrae las coordenadas geográficas de una imagen utilizando OCR.
+    
+    Parámetros:
+        reader (easyocr.Reader): Instancia de la clase Reader de easyocr.
+        image_path (str): Ruta del archivo de imagen.
+    
+    Retorna:
+        str: Coordenadas geográficas en el formato "latitud|longitud".
+       
+    Ejemplo:       
+        reader = easyocr.Reader(['en', 'es'])
+        image_path = 'ruta/imagen.jpg'
+        
+        extract_coordinates(reader, image_path)
+    """
     image = np.asarray(cv2.imread(image_path))
     lat = __get_latitude(reader, image)
     long = __get_longitude(reader, image)    
     return lat + '|' + long
 
 def __get_latitude(reader: easyocr.Reader, image: np.array) -> str:
+    
+    """
+    Obtiene la latitud de una imagen utilizando OCR.
+    
+    Parámetros:
+        reader (easyocr.Reader): Instancia de la clase Reader de easyocr.
+        image: Imagen en formato de numpy array.
+    
+    Retorna:
+        str: Latitud de la imagen. O 'Incalculable' si no pudo calcular adecuadamente el valor.
+       
+    Ejemplo:       
+        reader = easyocr.Reader(['en', 'es'])
+        image = np.asarray(cv2.imread('ruta/imagen.jpg'))
+        
+        get_latitude(reader, image)
+    """
+
     try:
         box = image[40:64, 1080:1250, :]
         text = reader.readtext(image=box)[0][1]
@@ -258,6 +308,24 @@ def __get_latitude(reader: easyocr.Reader, image: np.array) -> str:
         return 'Incalculable'
 
 def __get_longitude(reader: easyocr.Reader, image: np.array) -> str:
+    
+    """ 
+    Obtiene la longitud de una imagen utilizando OCR.
+    
+    Parámetros:
+        reader (easyocr.Reader): Instancia de la clase Reader de easyocr.
+        image: Imagen en formato de numpy array.
+    
+    Retorna:
+        str: Longitud de la imagen. O 'Incalculable' si no pudo calcular adecuadamente el valor.
+       
+    Ejemplo:       
+        reader = easyocr.Reader(['en', 'es'])
+        image = np.asarray(cv2.imread('ruta/imagen.jpg'))
+        
+        get_longitud(reader, image)
+    """
+
     try:
         box = image[40:63, 940:1080, :]
         text = reader.readtext(image=box)[0][1]
@@ -268,6 +336,7 @@ def __get_longitude(reader: easyocr.Reader, image: np.array) -> str:
         return 'Incalculable'
     
 def __compose_csv(output_path: str, data: list, csv_name: str):
+    
     """
     Crea un archivo CSV y escribe los datos en él.
 
@@ -299,4 +368,3 @@ def __compose_csv(output_path: str, data: list, csv_name: str):
     with open(csv_path, 'w', encoding='UTF-8') as output:
         writer = csv.writer(output)
         writer.writerows(data)
-    
