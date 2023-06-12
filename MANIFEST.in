@@ -1,2 +1,2 @@
-include texts/*.joblib
-includes videos/*.pt
+include SapaceInvaders/*.joblib
+includes SapaceInvaders/*.pt
